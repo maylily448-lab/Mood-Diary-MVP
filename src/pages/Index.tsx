@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOODS, CHEER_MESSAGES, useMoodStore, type MoodType } from '@/store/moodStore';
+import { MOODS, CHEER_MESSAGES, BEAR_HAPPY, useMoodStore, type MoodType } from '@/store/moodStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +45,7 @@ const Index = () => {
       </motion.div>
 
       <div className="mt-8 flex flex-wrap justify-center gap-4">
-        {MOODS.map(({ type, emoji, label }, i) => (
+        {MOODS.map(({ type, image, label }, i) => (
           <motion.button
             key={type}
             initial={{ scale: 0, opacity: 0 }}
@@ -54,13 +54,13 @@ const Index = () => {
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setSelectedMood(type)}
-            className={`flex flex-col items-center gap-2 rounded-2xl border-2 bg-card p-5 shadow-md transition-colors ${
+            className={`flex flex-col items-center gap-2 rounded-2xl border-2 bg-card p-4 shadow-md transition-colors ${
               selectedMood === type
                 ? 'border-primary shadow-lg'
                 : 'border-transparent hover:border-accent'
             }`}
           >
-            <span className="text-4xl">{emoji}</span>
+            <img src={image} alt={label} className="h-16 w-16 object-contain" />
             <span className="text-xs font-medium text-muted-foreground">{label}</span>
           </motion.button>
         ))}
@@ -94,7 +94,8 @@ const Index = () => {
 
       <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
         <DialogContent className="max-w-xs rounded-2xl border-accent text-center">
-          <DialogHeader>
+          <DialogHeader className="flex flex-col items-center">
+            <img src={BEAR_HAPPY} alt="축하 곰돌이" className="mb-2 h-24 w-24 object-contain" />
             <DialogTitle className="text-lg">기록 완료! 🎉</DialogTitle>
             <DialogDescription className="mt-2 text-base font-medium text-foreground">
               {cheerMsg}

@@ -1,4 +1,10 @@
 import { create } from 'zustand';
+import bearGreat from '@/assets/bear-great.png';
+import bearGood from '@/assets/bear-good.png';
+import bearMeh from '@/assets/bear-meh.png';
+import bearSad from '@/assets/bear-sad.png';
+import bearAngry from '@/assets/bear-angry.png';
+import bearHappy from '@/assets/bear-happy.png';
 
 export type MoodType = 'great' | 'good' | 'meh' | 'sad' | 'angry';
 
@@ -6,16 +12,18 @@ export interface MoodEntry {
   id: string;
   mood: MoodType;
   memo: string;
-  date: string; // ISO string
+  date: string;
 }
 
-export const MOODS: { type: MoodType; emoji: string; label: string }[] = [
-  { type: 'great', emoji: '😆', label: '최고' },
-  { type: 'good', emoji: '😊', label: '좋아' },
-  { type: 'meh', emoji: '😐', label: '보통' },
-  { type: 'sad', emoji: '😢', label: '슬퍼' },
-  { type: 'angry', emoji: '😠', label: '화나' },
+export const MOODS: { type: MoodType; image: string; label: string }[] = [
+  { type: 'great', image: bearGreat, label: '최고' },
+  { type: 'good', image: bearGood, label: '좋아' },
+  { type: 'meh', image: bearMeh, label: '보통' },
+  { type: 'sad', image: bearSad, label: '슬퍼' },
+  { type: 'angry', image: bearAngry, label: '화나' },
 ];
+
+export const BEAR_HAPPY = bearHappy;
 
 export const CHEER_MESSAGES = [
   '오늘도 수고했어요! ☀️',
@@ -31,7 +39,6 @@ interface MoodStore {
   addEntry: (mood: MoodType, memo: string) => void;
 }
 
-// Generate mock data for the past 7 days
 const generateMockData = (): MoodEntry[] => {
   const moodTypes: MoodType[] = ['great', 'good', 'meh', 'sad', 'good', 'great', 'meh'];
   const memos = [
@@ -43,16 +50,11 @@ const generateMockData = (): MoodEntry[] => {
     '운동하고 기분 좋아짐',
     '집에서 푹 쉬었다',
   ];
-  
+
   return moodTypes.map((mood, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
-    return {
-      id: `mock-${i}`,
-      mood,
-      memo: memos[i],
-      date: date.toISOString(),
-    };
+    return { id: `mock-${i}`, mood, memo: memos[i], date: date.toISOString() };
   });
 };
 
@@ -62,12 +64,7 @@ export const useMoodStore = create<MoodStore>((set) => ({
     set((state) => ({
       entries: [
         ...state.entries,
-        {
-          id: Date.now().toString(),
-          mood,
-          memo,
-          date: new Date().toISOString(),
-        },
+        { id: Date.now().toString(), mood, memo, date: new Date().toISOString() },
       ],
     })),
 }));
