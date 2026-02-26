@@ -33,7 +33,7 @@ const History = () => {
               transition={{ delay: i * 0.08 }}
               className="flex items-center gap-4 rounded-2xl bg-card p-4 shadow-md"
             >
-              <span className="text-3xl">{moodInfo?.emoji}</span>
+              <img src={moodInfo?.image} alt={moodInfo?.label} className="h-12 w-12 object-contain" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{moodInfo?.label}</p>
                 <p className="text-xs text-muted-foreground">

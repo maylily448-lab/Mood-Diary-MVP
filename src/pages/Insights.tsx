@@ -3,11 +3,21 @@ import { useMoodStore, MOODS, type MoodType } from '@/store/moodStore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
 
 const MOOD_COLORS: Record<MoodType, string> = {
-  great: '#67C6E3',
-  good: '#85D4A0',
-  meh: '#F4D983',
-  sad: '#A8B8D8',
+  great: '#F9B4C2',
+  good: '#F4D983',
+  meh: '#A8D8EA',
+  sad: '#C3AED6',
   angry: '#F4A0A0',
+};
+
+const CustomTick = ({ x, y, payload }: any) => {
+  const mood = MOODS.find((m) => m.label === payload.value);
+  if (!mood) return null;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <image href={mood.image} x={-14} y={4} width={28} height={28} />
+    </g>
+  );
 };
 
 const Insights = () => {
@@ -19,8 +29,8 @@ const Insights = () => {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const data = MOODS.map(({ type, emoji, label }) => ({
-    name: `${emoji} ${label}`,
+  const data = MOODS.map(({ type, label }) => ({
+    name: label,
     type,
     count: thisMonth.filter((e) => e.mood === type).length,
   }));
@@ -38,14 +48,15 @@ const Insights = () => {
       </p>
 
       <div className="mx-auto max-w-md rounded-2xl bg-card p-5 shadow-md">
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 12 }}
+              tick={<CustomTick />}
               axisLine={false}
               tickLine={false}
+              height={50}
             />
             <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
             <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={40}>
