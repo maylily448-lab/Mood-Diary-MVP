@@ -16,6 +16,7 @@ export interface MoodEntry {
   memo: string;
   date: string;
   activities: string[];
+  energy_level?: number;
 }
 
 export interface UserProfile {
@@ -65,6 +66,59 @@ export const MOOD_CHEER_BY_TYPE: Record<MoodType, string> = {
   angry: '화가 날 수 있어요. 깊게 숨 쉬고 나를 토닥여줘요 💆',
 };
 
+export interface RecoveryGuide {
+  id: string;
+  emoji: string;
+  title: string;
+  description: string;
+  durationSec: number;
+}
+
+export const RECOVERY_GUIDES: RecoveryGuide[] = [
+  {
+    id: 'eye-close',
+    emoji: '😌',
+    title: '60초 눈 감기',
+    description: '잠시 화면에서 눈을 떼고 어둠 속에서 휴식해보세요.',
+    durationSec: 60,
+  },
+  {
+    id: 'neck-stretch',
+    emoji: '🧘',
+    title: '목 스트레칭',
+    description: '목을 천천히 왼쪽으로, 그리고 오른쪽으로 5초씩 늘려주세요.',
+    durationSec: 30,
+  },
+  {
+    id: 'water-drink',
+    emoji: '💧',
+    title: '물 한 잔 마시기',
+    description: '시원한 물 한 잔으로 몸에 생기를 불어넣어 주세요.',
+    durationSec: 20,
+  },
+  {
+    id: 'deep-breath',
+    emoji: '🌬️',
+    title: '심호흡 4-7-8',
+    description: '4초 들이마시고, 7초 멈추고, 8초 내뱉어보세요.',
+    durationSec: 40,
+  },
+  {
+    id: 'window-view',
+    emoji: '🪟',
+    title: '창문 밖 보기',
+    description: '먼 곳을 응시하며 눈의 피로를 풀어주세요.',
+    durationSec: 60,
+  },
+  {
+    id: 'palm-rub',
+    emoji: '👐',
+    title: '손바닥 비비기',
+    description: '손바닥을 따뜻하게 비벼 눈 위에 살포시 올려보세요.',
+    durationSec: 30,
+  },
+];
+
 interface MoodStore {
   entries: MoodEntry[];
   isLoading: boolean;
@@ -73,7 +127,8 @@ interface MoodStore {
   setUser: (user: User | null) => void;
   fetchProfile: (userId: string) => Promise<void>;
   fetchEntries: () => Promise<void>;
-  addEntry: (mood: MoodType, memo: string, activities?: string[]) => Promise<void>;
+  fetchCheerMessage: (mood: MoodType, energy: number) => Promise<string>;
+  addEntry: (mood: MoodType, memo: string, activities?: string[], energyLevel?: number) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
 }
 
@@ -131,17 +186,41 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
         memo: d.memo || '',
         date: d.created_at,
         activities: [],
+        energy_level: d.energy_level ?? undefined,
       }));
       set({ entries: formattedData, isLoading: false });
     }
   },
 
-  addEntry: async (mood, memo, activities = []) => {
+  fetchCheerMessage: async (mood: MoodType, energy: number): Promise<string> => {
+    // Try to fetch from Supabase first
+    const { data, error } = await supabase
+      .from('cheer_messages')
+      .select('message')
+      .eq('mood_type', mood)
+      .lte('energy_range_start', energy)
+      .gte('energy_range_end', energy);
+
+    if (!error && data && data.length > 0) {
+      // Return a random message from the results
+      const randomIndex = Math.floor(Math.random() * data.length);
+      return data[randomIndex].message;
+    }
+
+    // Fallback if no specific message found or error
+    return MOOD_CHEER_BY_TYPE[mood];
+  },
+
+  addEntry: async (mood, memo, activities = [], energyLevel?: number) => {
     set({ isLoading: true });
 
     // Auth Check
     const { user } = get();
-    const insertData: any = { emoji_type: mood, memo: memo || null };
+    const insertData: any = {
+      emoji_type: mood,
+      memo: memo || null,
+      energy_level: energyLevel ?? null
+    };
     if (user) {
       insertData.user_id = user.id;
     }

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FloatingBearLoader } from '@/components/FloatingBearLoader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BEAR_HAPPY } from '@/store/moodStore';
 import { motion } from 'framer-motion';
 
 const Signup = () => {
@@ -77,8 +78,15 @@ const Signup = () => {
             {isLoading && <FloatingBearLoader message="가입 처리 중..." />}
 
             <div className="w-full max-w-sm rounded-3xl bg-card p-8 shadow-lg border border-border/50">
-                <div className="mb-6 text-center">
-                    <h1 className="text-2xl font-bold text-foreground">새로운 시작 🐻‍❄️</h1>
+                <div className="mb-6 text-center flex flex-col items-center">
+                    <motion.img
+                        src={BEAR_HAPPY}
+                        alt="Bear"
+                        className="h-20 w-20 object-contain mb-4"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                    />
+                    <h1 className="text-2xl font-bold text-foreground">새로운 시작</h1>
                     <p className="mt-2 text-sm text-muted-foreground">당신의 감정 기록을 시작해보세요.</p>
                 </div>
 

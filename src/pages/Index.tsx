@@ -10,7 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SuccessModal } from '@/components/SuccessModal';
 import { FloatingBearLoader } from '@/components/FloatingBearLoader';
+import { RecoveryToolbox } from '@/components/RecoveryToolbox';
+import { EnergySlider } from '@/components/EnergySlider';
+import { BurnoutAlert } from '@/components/BurnoutAlert';
 import { supabase } from '@/lib/supabase';
+import { HeartPulse, Heart } from 'lucide-react';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
@@ -19,10 +23,15 @@ const Index = () => {
   const [cheerMsg, setCheerMsg] = useState('');
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [savedMood, setSavedMood] = useState<MoodType | null>(null);
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [selectedEnergy, setSelectedEnergy] = useState(50);
+  const [cheerMessage, setCheerMessage] = useState('');
+  const [isThanked, setIsThanked] = useState(false);
 
   const [dailyQuote, setDailyQuote] = useState<string>('오늘 하루도 당신답게 빛나길 ✨');
 
   const addEntry = useMoodStore((s) => s.addEntry);
+  const fetchCheerMessage = useMoodStore((s) => s.fetchCheerMessage);
   const entries = useMoodStore((s) => s.entries);
   const isLoading = useMoodStore((s) => s.isLoading);
 
@@ -72,15 +81,21 @@ const Index = () => {
       return;
     }
 
-    await addEntry(selectedMood, memo, selectedActivities);
+    // Fetch personalized message first
+    const msg = await fetchCheerMessage(selectedMood, selectedEnergy);
+    setCheerMessage(msg);
 
-    setCheerMsg(CHEER_MESSAGES[Math.floor(Math.random() * CHEER_MESSAGES.length)]);
+    await addEntry(selectedMood, memo, selectedActivities, selectedEnergy);
+
+    setCheerMsg(msg);
     setSavedMood(selectedMood);
     setShowSuccess(true);
 
     setSelectedMood(null);
     setMemo('');
     setSelectedActivities([]);
+    setSelectedEnergy(50);
+    setIsThanked(false);
   };
 
   const savedMoodInfo = savedMood ? MOODS.find((m) => m.type === savedMood) : null;
@@ -134,8 +149,8 @@ const Index = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => { setSelectedMood(type); setSavedMood(null); }}
             className={`flex flex-col items-center gap-2 rounded-xl border-2 bg-card p-4 shadow-sm transition-all ${selectedMood === type
-                ? 'border-primary shadow-md scale-105'
-                : 'border-transparent hover:border-border'
+              ? 'border-primary shadow-md scale-105'
+              : 'border-transparent hover:border-border'
               }`}
           >
             <img src={image} alt={label} className="h-16 w-16 object-contain" />
@@ -176,6 +191,14 @@ const Index = () => {
             exit={{ height: 0, opacity: 0 }}
             className="mt-6 w-full max-w-sm overflow-hidden"
           >
+            {/* Energy Slider */}
+            <div className="mb-6">
+              <EnergySlider
+                value={selectedEnergy}
+                onChange={setSelectedEnergy}
+              />
+            </div>
+
             {/* Activity Tags (MVP functionality UI only currently) */}
             <div className="mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
               {ACTIVITY_TAGS.map((tag) => (
@@ -183,8 +206,8 @@ const Index = () => {
                   key={tag.id}
                   onClick={() => toggleActivity(tag.id)}
                   className={`cursor-pointer whitespace-nowrap select-none transition-colors border-0 hover:border-transparent ${selectedActivities.includes(tag.id)
-                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
                     }`}
                 >
                   {tag.emoji} {tag.label}
@@ -220,25 +243,85 @@ const Index = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="mt-8 flex flex-col items-center gap-4"
+            className="mt-8 flex flex-col items-center gap-4 w-full max-w-sm"
           >
-            <motion.img
-              src={savedMoodInfo.image}
-              alt={savedMoodInfo.label}
-              className="h-32 w-32 object-contain"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-            />
-            {/* Speech bubble */}
-            <div className="relative rounded-2xl bg-card px-5 py-3 shadow-md border border-border/50">
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-card" />
-              <p className="text-sm font-bold text-foreground text-center">
-                {MOOD_CHEER_BY_TYPE[savedMood]}
-              </p>
+            <div className="flex flex-col items-center gap-2">
+              <motion.div
+                animate={isThanked ? {
+                  scale: [1, 1.2, 1.1],
+                  rotate: [0, -5, 5, 0]
+                } : {}}
+                className="relative"
+              >
+                <img
+                  src={savedMoodInfo.image}
+                  alt={savedMoodInfo.label}
+                  className="h-32 w-32 object-contain"
+                />
+                {isThanked && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute -top-2 -right-2 bg-pink-500 rounded-full p-1"
+                  >
+                    <Heart className="text-white fill-current" size={16} />
+                  </motion.div>
+                )}
+              </motion.div>
+
+              <div className="relative">
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-card" />
+                <div className="bg-card p-4 rounded-2xl shadow-sm border border-border max-w-[280px] text-center">
+                  <p className="text-sm font-medium leading-relaxed break-keep">
+                    {cheerMsg}
+                  </p>
+                  {!isThanked && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsThanked(true)}
+                      className="mt-2 h-8 text-xs font-bold text-primary hover:bg-primary/10 rounded-xl"
+                    >
+                      고마워 💛
+                    </Button>
+                  )}
+                  {isThanked && (
+                    <p className="mt-2 text-[11px] text-pink-500 font-bold italic animate-pulse">
+                      곰돌이가 수줍어해요! 유후~
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
+
+            {/* Burnout Alert Component */}
+            <BurnoutAlert
+              mood={savedMood}
+              energy={selectedEnergy}
+              onOpenSOS={() => setShowRecovery(true)}
+            />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* SOS FAB */}
+      <motion.button
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setShowRecovery(true)}
+        className="fixed right-4 z-40 h-14 w-14 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center border-4 border-background"
+        style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
+      >
+        <HeartPulse size={28} />
+      </motion.button>
+
+      {/* Recovery Toolbox Component */}
+      <RecoveryToolbox
+        open={showRecovery}
+        onOpenChange={setShowRecovery}
+      />
 
       {/* Success Dialog Component */}
       <SuccessModal

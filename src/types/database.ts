@@ -71,6 +71,7 @@ export interface Database {
                     emoji_type: string
                     memo: string | null
                     created_at: string
+                    energy_level: number | null
                 }
                 Insert: {
                     id?: string
@@ -78,6 +79,7 @@ export interface Database {
                     emoji_type: string
                     memo?: string | null
                     created_at?: string
+                    energy_level?: number | null
                 }
                 Update: {
                     id?: string
@@ -85,6 +87,31 @@ export interface Database {
                     emoji_type?: string
                     memo?: string | null
                     created_at?: string
+                    energy_level?: number | null
+                }
+                Relationships: []
+            }
+            cheer_messages: {
+                Row: {
+                    id: string
+                    mood_type: string
+                    energy_range_start: number
+                    energy_range_end: number
+                    message: string
+                }
+                Insert: {
+                    id?: string
+                    mood_type: string
+                    energy_range_start: number
+                    energy_range_end: number
+                    message: string
+                }
+                Update: {
+                    id?: string
+                    mood_type?: string
+                    energy_range_start?: number
+                    energy_range_end?: number
+                    message?: string
                 }
                 Relationships: []
             }

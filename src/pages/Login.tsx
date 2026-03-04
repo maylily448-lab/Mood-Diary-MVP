@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FloatingBearLoader } from '@/components/FloatingBearLoader';
+import { BEAR_HAPPY } from '@/store/moodStore';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -45,8 +46,15 @@ const Login = () => {
             {isLoading && <FloatingBearLoader message="로그인 중..." />}
 
             <div className="w-full max-w-sm rounded-3xl bg-card p-8 shadow-lg border border-border/50">
-                <div className="mb-8 text-center">
-                    <h1 className="text-2xl font-bold text-foreground">다시 만나서 반가워요! 🐻</h1>
+                <div className="mb-6 text-center flex flex-col items-center">
+                    <motion.img
+                        src={BEAR_HAPPY}
+                        alt="Bear"
+                        className="h-20 w-20 object-contain mb-4"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                    />
+                    <h1 className="text-2xl font-bold text-foreground">다시 만나서 반가워요!</h1>
                     <p className="mt-2 text-sm text-muted-foreground">감정을 기록하러 오셨군요.</p>
                 </div>
 
